@@ -11,8 +11,8 @@ void write_color(std::ostream& out, const color& pixel_colour) {
     auto b = pixel_colour.z();
 
     short rbyte = short(255.999 * r);
-    short gbyte = short(255.999 * r);
-    short bbyte = short(255.999 * r);
+    short gbyte = short(255.999 * g);
+    short bbyte = short(255.999 * b);
 
 
     out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
