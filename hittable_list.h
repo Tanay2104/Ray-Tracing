@@ -1,13 +1,8 @@
 #ifndef HITTABLE_LIST_H
 #define HITTABLE_LIST_H
-
+#include "rtcommon.h"
 #include "hittable.h"
-
-#include <memory>
 #include <vector>
-
-using std::make_shared;
-using std::shared_ptr;
 
 class hittable_list : public hittable {
     public:
@@ -32,7 +27,6 @@ class hittable_list : public hittable {
                 }
             }
             return hit_anything;
-
         }
 };
 #endif
