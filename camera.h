@@ -69,7 +69,7 @@ class camera {
             return color(0, 0, 0);
         hit_record rec;
         if (world.hit(r, interval(0.0001, infinity), rec)) {
-            vec3 direction = random_on_hemisphere(rec.normal);
+            vec3 direction = rec.normal + random_unit_vector();
             return 0.5 * ray_color(ray(rec.p, direction), depth-1, world);
         }
         vec3 unit_direction = unit_vector(r.direction());
