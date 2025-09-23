@@ -1,0 +1,433 @@
+#include "rtcommon.h"
+
+#include "camera.h"
+#include "hittable.h"
+#include "hittable_list.h"
+#include "sphere.h"
+
+
+int main() {
+        hittable_list world;
+
+        world.add(make_shared<sphere>(point3(0, 0, -1), 0.5));
+        world.add(make_shared<sphere>(point3(0, -100.5, -1), 100));
+        world.add(make_shared<sphere>(point3(-1, -0.5, -0.8), 2));
+
+        camera cam;
+        cam.aspect_ratio = 16.0/9.0;
+        cam.image_width = 400;
+        cam.samples_per_pixel = 100;
+        cam.max_depth = 50;
+        cam.render(world);
+}#ifndef CAMERA_H
+#define CAMERA_H
+
+#include "hittable.h"
+
+class camera {
+  public:
+    double aspect_ratio = 1.0;  // Ratio of image width over height
+    int    image_width  = 100;  // Rendered image width in pixel count
+    int samples_per_pixel = 10; // Count of random samples for each pixel
+    int max_depth = 10;
+    void render(const hittable& world) {
+        initialize();
+
+        std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+
+        for (int j = 0; j < image_height; j++) {
+            std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
+            for (int i = 0; i < image_width; i++) {
+                color pixel_color(0, 0, 0);
+                for (int sample = 0; sample < samples_per_pixel; sample++) {
+                    ray r = get_ray(i, j);
+                    pixel_color += ray_color(r, max_depth, world);
+                }
+                write_color(std::cout, pixel_color*pixel_samples_scale);
+            }
+        }
+
+        std::clog << "\rDone.                 \n";
+    }
+
+  private:
+    int    image_height;   // Rendered image height
+    double pixel_samples_scale; // Color scale factor for a sum of pixel samples
+    point3 center;         // Camera center
+    point3 pixel00_loc;    // Location of pixel 0, 0
+    vec3   pixel_delta_u;  // Offset to pixel to the right
+    vec3   pixel_delta_v;  // Offset to pixel below
+
+    void initialize() {
+        image_height = int(image_width / aspect_ratio);
+        image_height = (image_height < 1) ? 1 : image_height;
+
+        pixel_samples_scale = 1.0 / samples_per_pixel;
+        center = point3(0, 0, 0);
+
+        // Determine viewport dimensions.
+        auto focal_length = 1.0;
+        auto viewport_height = 2.0;
+        auto viewport_width = viewport_height * (double(image_width)/image_height);
+
+        // Calculate the vectors across the horizontal and down the vertical viewport edges.
+        auto viewport_u = vec3(viewport_width, 0, 0);
+        auto viewport_v = vec3(0, -viewport_height, 0);
+
+        // Calculate the horizontal and vertical delta vectors from pixel to pixel.
+        pixel_delta_u = viewport_u / image_width;
+        pixel_delta_v = viewport_v / image_height;
+
+        // Calculate the location of the upper left pixel.
+        auto viewport_upper_left =
+            center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
+        pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+    }
+
+    color ray_color(const ray& r, int depth, const hittable& world) const {
+        // If we've exceeded the ray bounce limit, no more light is gathered.
+        if (depth <= 0)
+            return color(0, 0, 0);
+        hit_record rec;
+        if (world.hit(r, interval(0.0001, infinity), rec)) {
+            vec3 direction = random_on_hemisphere(rec.normal);
+            return 0.5 * ray_color(ray(rec.p, direction), depth-1, world);
+        }
+        vec3 unit_direction = unit_vector(r.direction());
+        auto a = 0.5*(unit_direction.y() + 1.0);
+        return (1.0 - a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
+    }
+
+    ray get_ray(int i, int j) const {
+        // Construct a camera ray originating from the origin and directed at radnomly sampled
+        // point around the pixel location i, j.
+
+        auto offset = sample_square();
+        auto pixel_sample = pixel00_loc
+                            + ((i + offset.x()) * pixel_delta_u)
+                            + ((j + offset.y()) * pixel_delta_v);
+        auto ray_origin = center;
+        auto ray_direction = pixel_sample - ray_origin;
+
+        return ray(ray_origin, ray_direction);
+    }
+
+    vec3 sample_square() const {
+        // Returns the vector to a random point in the [-.5, -.5] - [+.5, +.5] unit square
+        return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+    }
+};
+
+#endif#ifndef COLOR_H
+#define COLOR_H
+#include "interval.h"
+#include "vec3.h"
+using color = vec3;
+void write_color(std::ostream& out, const color& pixel_colour) {
+    auto r = pixel_colour.x();
+    auto g = pixel_colour.y();
+    auto b = pixel_colour.z();
+
+    // Translating the [0, 1] component values to the byte range [0, 255]
+    static const interval intensity(0.000, 0.999);
+    short rbyte = short(255.999 * intensity.clamp(r));
+    short gbyte = short(255.999 * intensity.clamp(g));
+    short bbyte = short(255.999 * intensity.clamp(b));
+
+
+    out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
+}
+
+#endif#ifndef HITTABLE_LIST_H
+#define HITTABLE_LIST_H
+#include "rtcommon.h"
+#include "hittable.h"
+#include <vector>
+
+class hittable_list : public hittable {
+    public:
+        std::vector<shared_ptr<hittable>> objects;
+        hittable_list() {}
+        hittable_list(shared_ptr<hittable> object) { add(object); }
+        void clear() { objects.clear(); }
+        void add(shared_ptr<hittable> object) {
+            objects.push_back(object);
+        }
+
+        bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
+            hit_record temp_rec;
+            bool hit_anything  = false;
+            auto closest_so_far = ray_t.max;
+            
+            for (const auto& object: objects) {
+                if (object->hit(r, interval(ray_t.min, closest_so_far), temp_rec)) {
+                    hit_anything = true;
+                    closest_so_far = temp_rec.t;
+                    rec = temp_rec;
+                }
+            }
+            return hit_anything;
+        }
+};
+#endif#ifndef HITTABLE_H
+#define HITTABLE_H
+
+#include "rtcommon.h"
+
+class hit_record {
+    public:
+        point3 p;
+        vec3 normal;
+        double t;
+        bool front_face;
+
+        void set_face_normal(const ray& r, const vec3& outward_normal) {
+            // Sets the hit record normal vector.
+            // NOTE: the parameter `outward_normal1 is assumed to have unit length.
+
+            front_face = dot(r.direction(), outward_normal) < 0;
+            normal = front_face ? outward_normal : -outward_normal;
+        }
+};
+
+class hittable {
+    public:
+        virtual ~hittable() = default;
+        virtual bool hit(const ray& r, interval rat, hit_record& rec) const = 0;
+};
+
+#endif#ifndef INTERVAL_H
+#define INTERVAL_H
+
+class interval {
+    public:
+        double min, max;
+        interval() : min(+infinity), max(-infinity) {}
+        interval(double min, double max) : min(min), max(max) {}
+        double size() const {
+            return max - min;
+        }
+        bool contains(double x) const {
+            return min <= x && x <= max;
+        }
+        bool surrounds(double x) const {
+            return min < x && x < max;
+        }
+        double clamp(double x) const {
+            if (x < min) return min;
+            if (x > max) return max;
+            return x;
+        }
+
+        static const interval empty, universe;
+};
+
+const interval interval::empty = interval(+infinity, -infinity);
+const interval interval::universe = interval(-infinity, +infinity);
+#endif#ifndef RAY_H
+#define RAY_H
+
+
+class ray {
+        point3 orig;
+        vec3 dir;
+    public:
+        ray() {}
+        ray(const point3& origin, const vec3& direction) : orig(origin), dir(direction) {}
+        const point3& origin() const {return orig;}
+        const vec3& direction() const {return dir;}
+
+        point3 at(double t) const {
+            return orig + t*dir;
+        }
+};
+
+#endif#ifndef RTCOMMON_H
+#define RTCOMMON_H
+
+#include <cmath>
+#include <iostream>
+#include <cstdlib>
+#include <limits>
+#include <memory>
+
+// C++ std using
+using std::make_shared;
+using std::shared_ptr;
+// Constants
+const double infinity = std::numeric_limits<double>::infinity();
+const double pi = 3.1415926535897932385;
+// Utility functions
+inline double degrees_to_radians(double degrees) {
+    return degrees * 
+    pi / 180.0;
+}
+inline double random_double() {
+    return rand() / (RAND_MAX + 1.0);
+}
+
+inline double random_double(double min, double max) {
+    return min + (max-min)*random_double();
+}
+// Common Headers
+#include "color.h"
+#include "interval.h"
+#include "ray.h"
+#include "vec3.h"
+
+#endif#ifndef SPHERE_H
+#define SPHERE_H
+
+#include "hittable.h"
+#include "rtcommon.h"
+
+class sphere: public hittable {
+    private:
+        point3 center;
+        double radius;
+    public:
+        sphere(const point3& c, double r) : center(c), radius(std::fmax(0, r)) {}
+
+        bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
+            vec3 oc  = center - r.origin();
+            auto a = r.direction().length_squared();
+            auto h = dot(r.direction(), oc);
+            auto c = oc.length_squared() - radius*radius;
+
+            auto discriminant = h*h - a*c;
+            if (discriminant < 0)
+                return false;
+
+            auto sqrtd = std::sqrt(discriminant);
+
+            // Find the nearest root that lies in the acceptable range
+            auto root = (h - sqrtd) / a;
+            if (!ray_t.surrounds(root)) {
+                root = (h + sqrtd) / a;
+                if (!ray_t.surrounds(root))
+                    return false;
+            }
+
+            // Storing record of hit. 
+            rec.t = root;
+            rec.p = r.at(rec.t);
+            vec3 outward_normal = (rec.p - center) / radius;
+            rec.set_face_normal(r, outward_normal); 
+
+            return true;
+        }
+};
+#endif#ifndef VEC3_H
+#define VEC3_H
+
+#include <cmath>
+#include <iostream>
+
+class vec3 {
+    public:
+        double e[3];
+        vec3() : e{0, 0, 0} {}
+        vec3(double e0, double e1, double e2) : e{e0, e1, e2} {}
+
+        double x() const {return e[0]; }
+        double y() const {return e[1]; }
+        double z() const {return e[2]; }
+
+        vec3 operator-() const{
+            return vec3(-e[0], -e[1], -e[2]); 
+        }
+
+        double operator[](int i) const {return e[i]; }
+        double& operator[](int i) {return e[i]; }
+
+        vec3& operator+=(const vec3& v) {
+            e[0] += v.e[0];
+            e[1] += v.e[1];
+            e[2] += v.e[2];
+            return *this;
+        }
+        vec3& operator*=(double t) {
+            e[0] *= t;
+            e[1] *= t;
+            e[2] *= t;
+            return *this;
+        }
+
+        vec3& operator/=(double t) {
+            return *this *=1/t;
+        }
+        double length() const {
+            return std::sqrt(length_squared());
+        }
+        double length_squared() const {
+            return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
+        }
+        static vec3 random() {
+            return vec3(random_double(), random_double(), random_double());
+        }
+        static vec3 random(double min, double max) {
+            return vec3(random_double(min, max), random_double(min, max), random_double(min, max));
+        }
+};
+using point3 = vec3;
+// Vector Utility Functions
+inline std::ostream& operator<<(std::ostream& out, const vec3& v) {
+    return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2];
+}
+
+inline vec3 operator+(const vec3& u, const vec3& v) {
+    return vec3(u.e[0] + v.e[0], u.e[1] + v.e[1], u.e[2] + v.e[2]);
+}
+
+inline vec3 operator-(const vec3& u, const vec3& v) {
+    return vec3(u.e[0] - v.e[0], u.e[1] - v.e[1], u.e[2] - v.e[2]);
+}
+
+inline vec3 operator*(const vec3& u, const vec3& v) {
+    return vec3(u.e[0] * v.e[0], u.e[1] * v.e[1], u.e[2] * v.e[2]);
+}
+
+inline vec3 operator*(double t, const vec3& v) {
+    return vec3(t*v.e[0], t*v.e[1], t*v.e[2]);
+}
+
+inline vec3 operator*(const vec3& v, double t) {
+    return t * v;
+}
+
+inline vec3 operator/(const vec3& v, double t) {
+    return (1/t) * v;
+}
+
+inline double dot(const vec3& u, const vec3& v) {
+    return u.e[0] * v.e[0]
+         + u.e[1] * v.e[1]
+         + u.e[2] * v.e[2];
+}
+
+inline vec3 cross(const vec3& u, const vec3& v) {
+    return vec3(u.e[1] * v.e[2] - u.e[2] * v.e[1],
+                u.e[2] * v.e[0] - u.e[0] * v.e[2],
+                u.e[0] * v.e[1] - u.e[1] * v.e[0]);
+}
+
+inline vec3 unit_vector(const vec3& v) {
+    return v / v.length();
+}
+
+inline vec3 random_unit_vector() {
+    while (true) {
+        auto p = vec3::random(-1, 1);
+        auto lensq = p.length_squared();
+        if (1e-160 < lensq && lensq <= 1)
+            return p / sqrt(lensq);
+    }
+}
+inline vec3 random_on_hemisphere(const vec3& normal) {
+    vec3 on_unit_sphere = random_unit_vector();
+    if (dot(on_unit_sphere, normal) > 0.0) // Same hemisphere as normal
+        return on_unit_sphere;
+    else
+        return -on_unit_sphere;
+}
+#endif
