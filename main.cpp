@@ -7,26 +7,31 @@
 #include "sphere.h"
 
 
-int main() {
-       hittable_list world;
+int main(int argc, char* argv[]) {
+    if (argc == 1) {
+        std::cout  << "Usage: ./ray_tracer (SAMPLES)" << std::endl;
+        return 1;
+    }
+    int samples = int(*argv[1]);
+    hittable_list world;
 
     auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
     world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
 
-    for (int a = -4; a < 4; a++) {
-        for (int b = -4; b < 4; b++) {
+    for (int a = -5; a < 5; a++) {
+        for (int b = -5; b < 5; b++) {
             auto choose_mat = random_double();
             point3 center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
 
             if ((center - point3(4, 0.2, 0)).length() > 0.9) {
                 shared_ptr<material> sphere_material;
 
-                if (choose_mat < 0.8) {
+                if (choose_mat < 0.5) {
                     // diffuse
                     auto albedo = color::random() * color::random();
                     sphere_material = make_shared<lambertian>(albedo);
                     world.add(make_shared<sphere>(center, 0.2, sphere_material));
-                } else if (choose_mat < 0.95) {
+                } else if (choose_mat < 0.85) {
                     // metal
                     auto albedo = color::random(0.5, 1);
                     auto fuzz = random_double(0, 0.5);
@@ -54,7 +59,7 @@ int main() {
 
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.image_width       = 1200;
-    cam.samples_per_pixel = 20;
+    cam.samples_per_pixel = samples;
     cam.max_depth         = 50;
 
     cam.vfov     = 20;
