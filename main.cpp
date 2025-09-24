@@ -54,7 +54,7 @@ int main() {
 
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.image_width       = 1200;
-    cam.samples_per_pixel = 50;
+    cam.samples_per_pixel = 5;
     cam.max_depth         = 50;
 
     cam.vfov     = 20;
@@ -65,5 +65,27 @@ int main() {
     cam.defocus_angle = 0.6;
     cam.focus_dist    = 10.0;
 
+    auto start = std::chrono::steady_clock::now();
     cam.render(world);
+    auto end = std::chrono::steady_clock::now();
+    auto duration_minutes = std::chrono::duration_cast<std::chrono::minutes>(end - start);
+    std::ofstream logFile;
+    logFile.open("performance_logs.txt", std::ios::app);
+     if (!logFile.is_open()) {
+        std::cerr << "Error: Unable to open the file." << std::endl;
+    }
+    logFile << "\n-----------";
+    logFile << "\nCamera aspect ratio: " << cam.aspect_ratio \
+                << "\nImage width: " << cam.image_width \
+                << "\nSamples per pixel: " << cam.samples_per_pixel \
+                << "\nMax depth: " << cam.max_depth \
+                << "\nVertical fov: " << cam.vfov \
+                << "\nLook from: " << cam.lookfrom \
+                << "\nLook At: " << cam.lookat \
+                << "\nCamera up direction: " << cam.vup \
+                << "\nDefocus angle: " << cam.defocus_angle \
+                << "\nFocus dist: " << cam.focus_dist \
+                << "\nTIME TAKEN(MINUTES): " << duration_minutes.count();
+    logFile << "\n-----------";
+    logFile.close();
 }
