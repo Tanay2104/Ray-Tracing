@@ -13,8 +13,8 @@ int main() {
     auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
     world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
 
-    for (int a = -11; a < 11; a++) {
-        for (int b = -11; b < 11; b++) {
+    for (int a = -4; a < 4; a++) {
+        for (int b = -4; b < 4; b++) {
             auto choose_mat = random_double();
             point3 center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
 
@@ -54,7 +54,7 @@ int main() {
 
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.image_width       = 1200;
-    cam.samples_per_pixel = 5;
+    cam.samples_per_pixel = 20;
     cam.max_depth         = 50;
 
     cam.vfov     = 20;
@@ -64,11 +64,11 @@ int main() {
 
     cam.defocus_angle = 0.6;
     cam.focus_dist    = 10.0;
-
+    std::ofstream imageFile;
     auto start = std::chrono::steady_clock::now();
-    cam.render(world);
+    cam.render(world, imageFile);
     auto end = std::chrono::steady_clock::now();
-    auto duration_minutes = std::chrono::duration_cast<std::chrono::minutes>(end - start);
+    auto duration_seconds = std::chrono::duration_cast<std::chrono::seconds>(end - start);
     std::ofstream logFile;
     logFile.open("performance_logs.txt", std::ios::app);
      if (!logFile.is_open()) {
@@ -85,7 +85,7 @@ int main() {
                 << "\nCamera up direction: " << cam.vup \
                 << "\nDefocus angle: " << cam.defocus_angle \
                 << "\nFocus dist: " << cam.focus_dist \
-                << "\nTIME TAKEN(MINUTES): " << duration_minutes.count();
+                << "\nTIME TAKEN(SECONDS): " << duration_seconds.count();
     logFile << "\n-----------";
     logFile.close();
 }

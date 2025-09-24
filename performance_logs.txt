@@ -2,7 +2,7 @@
 -----------
 Camera aspect ratio: 1.77778
 Image width: 1200
-Samples per pixel: 5
+Samples per pixel: 1
 Max depth: 50
 Vertical fov: 20
 Look from: 13 2 3
@@ -10,5 +10,31 @@ Look At: 0 0 0
 Camera up direction: 0 1 0
 Defocus angle: 0.6
 Focus dist: 10
-TIME TAKEN(MINUTES): 2
+TIME TAKEN(MINUTES): 0
+-----------
+-----------
+Camera aspect ratio: 1.77778
+Image width: 1200
+Samples per pixel: 10
+Max depth: 50
+Vertical fov: 20
+Look from: 13 2 3
+Look At: 0 0 0
+Camera up direction: 0 1 0
+Defocus angle: 0.6
+Focus dist: 10
+TIME TAKEN(MINUTES): 0
+-----------
+-----------
+Camera aspect ratio: 1.77778
+Image width: 1200
+Samples per pixel: 10
+Max depth: 50
+Vertical fov: 20
+Look from: 13 2 3
+Look At: 0 0 0
+Camera up direction: 0 1 0
+Defocus angle: 0.6
+Focus dist: 10
+TIME TAKEN(SECONDS): 42
 -----------
