@@ -1,1 +1,6 @@
-.vscode
+build/
+ray_tracer
+*.ppm
+performance_logs.txt
+.DS_Store
+.vscode/

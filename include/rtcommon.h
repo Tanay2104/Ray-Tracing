@@ -9,7 +9,10 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
-
+#include <vector>
+#include <utility>
+#include <queue>
+#include <array>
 // C++ std using
 using std::make_shared;
 using std::shared_ptr;

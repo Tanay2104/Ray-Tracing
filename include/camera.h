@@ -7,9 +7,12 @@
 class camera {
   public:
     double aspect_ratio = 1.0;  // Ratio of image width over height
-    int    image_width  = 100;  // Rendered image width in pixel count
-    int samples_per_pixel = 10; // Count of random samples for each pixel
-    int max_depth = 10;
+    unsigned short image_width  = 100;  // Rendered image width in pixel count
+    unsigned short image_height;   // Rendered image height
+    unsigned short samples_per_pixel = 10; // Count of random samples for each pixel
+    unsigned short max_depth = 10;
+    unsigned short block_size_y = 32;
+    unsigned short block_size_x = 32;
 
     double vfov = 90; // Vertical field of view(view angle)
     point3 lookfrom = point3(0, 0, 0); // Point camera is looking from
@@ -19,10 +22,11 @@ class camera {
     double defocus_angle = 0; // Variation of angle of rays through each pixel
     double focus_dist = 10; // Distance from camera lookfrom point to plane of perfect focus
 
-    void render(const hittable& world, std::ofstream& imageFile);
+    void render(const hittable& world, std::vector<color>& data, const int sub_x, const int sub_y);
+    void initialize();
 
   private:
-    int    image_height;   // Rendered image height
+   
     double pixel_samples_scale; // Color scale factor for a sum of pixel samples
     point3 center;         // Camera center
     point3 pixel00_loc;    // Location of pixel 0, 0
@@ -32,7 +36,6 @@ class camera {
     vec3 defocus_disk_u; // Defocus disk horizontal radius
     vec3 defocus_disk_v; // Defocus disk vertical radius
 
-    void initialize();
 
     color ray_color(const ray& r, int depth, const hittable& world) const;
 

@@ -1,22 +1,17 @@
 #include "camera.h"
-void camera::render(const hittable& world, std::ofstream& imageFile) {
-    initialize();
-    imageFile.open("imagefile.ppm", std::ios::out);
-    imageFile << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-
-    for (int j = 0; j < image_height; j++) {
-        std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
-        for (int i = 0; i < image_width; i++) {
+void camera::render(const hittable& world, std::vector<color>& data, const int sub_x, const int sub_y) {
+    for (int j = block_size_y*sub_y; j < block_size_y*(sub_y+1); j++) {
+        // std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
+        for (int i = block_size_x*sub_x; i < block_size_x*(sub_x+1); i++) {
             color pixel_color(0, 0, 0);
             for (int sample = 0; sample < samples_per_pixel; sample++) {
                 ray r = get_ray(i, j);
                 pixel_color += ray_color(r, max_depth, world);
             }
-            write_color(imageFile, pixel_color*pixel_samples_scale);
+            data[j*image_width + i] = pixel_color*pixel_samples_scale;
         }
     }
-
-    std::clog << "\rDone.                 \n";
+    // std::clog << "\rDone.                 \n";
 }
 
 void camera::initialize() {

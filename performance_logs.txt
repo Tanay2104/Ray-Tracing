@@ -1,14 +1,99 @@
-
 -----------
-Camera aspect ratio: 1.77778
-Image width: 1200
-Samples per pixel: 50
-Max depth: 50
-Vertical fov: 20
-Look from: 13 2 3
-Look At: 0 0 0
-Camera up direction: 0 1 0
-Defocus angle: 0.6
-Focus dist: 10
-TIME TAKEN(SECONDS): 27
+Camera aspect ratio: 1.5
+Image width: 960
+Samples per pixel: 100
+Vertical fov: 35
+CPU Threads: 1
+Block size x 32
+TIME TAKEN(SECONDS): 31
+-----------
+-----------
+Camera aspect ratio: 1.5
+Image width: 960
+Samples per pixel: 100
+Vertical fov: 35
+CPU Threads: 2
+Block size x 32
+TIME TAKEN(SECONDS): 17
+-----------
+-----------
+Camera aspect ratio: 1.5
+Image width: 960
+Samples per pixel: 100
+Vertical fov: 35
+CPU Threads: 3
+Block size x 32
+TIME TAKEN(SECONDS): 13
+-----------
+-----------
+Camera aspect ratio: 1.5
+Image width: 960
+Samples per pixel: 100
+Vertical fov: 35
+CPU Threads: 4
+Block size x 32
+TIME TAKEN(SECONDS): 12
+-----------
+-----------
+Camera aspect ratio: 1.5
+Image width: 960
+Samples per pixel: 100
+Vertical fov: 35
+CPU Threads: 5
+ Block size x 32
+TIME TAKEN(SECONDS): 14
+-----------
+-----------
+Camera aspect ratio: 1.5
+Image width: 960
+Samples per pixel: 100
+Vertical fov: 35
+CPU Threads: 6
+ Block size x 32
+TIME TAKEN(SECONDS): 13
+-----------
+-----------
+Camera aspect ratio: 1.5
+Image width: 960
+Samples per pixel: 100
+Vertical fov: 35
+CPU Threads: 8
+Block size x 32
+TIME TAKEN(SECONDS): 13
+-----------
+-----------
+Camera aspect ratio: 1.5
+Image width: 960
+Samples per pixel: 100
+Vertical fov: 35
+CPU Threads: 4
+Block size x 32
+TIME TAKEN(SECONDS): 11
+-----------
+-----------
+Camera aspect ratio: 1.5
+Image width: 960
+Samples per pixel: 100
+Vertical fov: 35
+CPU Threads: 20
+Block size x 32
+TIME TAKEN(SECONDS): 13
+-----------
+-----------
+Camera aspect ratio: 1.5
+Image width: 960
+Samples per pixel: 100
+Vertical fov: 35
+CPU Threads: 4
+Block size x 32
+TIME TAKEN(SECONDS): 11
+-----------
+-----------
+Camera aspect ratio: 1.5
+Image width: 960
+Samples per pixel: 200
+Vertical fov: 35
+CPU Threads: 4
+Block size x 32
+TIME TAKEN(SECONDS): 25
 -----------
